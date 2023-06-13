@@ -1,4 +1,4 @@
-use crate::glutton_para::runtime_types::sp_arithmetic::per_things::Perbill;
+use crate::glutton_para::runtime_types::sp_arithmetic::fixed_point::FixedU64;
 use clap::{Parser, ValueEnum};
 use codec::Encode;
 use subxt::{
@@ -35,14 +35,14 @@ struct Cli {
     to: u32,
 
     /// Optional new 'storage' value to update
-    /// Value in parts per billion. E.g: 500000000 equals 50% of a block `ref_time` consumed
+    /// Value in `FixedU64`. E.g: 1400000000 equals 140% of a block `ref_time` consumed
     #[arg(short, long)]
-    storage: Option<u32>,
+    storage: Option<u64>,
 
     /// Optional new 'compute' value to update
-    /// Value in parts per billion. E.g: 500000000 equals 50% of a block `proof_size` consumed
+    /// Value in `FixedU64`. E.g: 1400000000 equals 140% of a block `proof_size` consumed
     #[arg(short, long)]
-    compute: Option<u32>,
+    compute: Option<u64>,
 
     /// Sudo account secret seed in hex format
     #[arg(short, long)]
@@ -50,7 +50,7 @@ struct Cli {
 }
 
 // Generate an interface that we can use from the node's metadata.
-#[subxt::subxt(runtime_metadata_path = "./artifacts/glutton_metadata.scale")]
+#[subxt::subxt(runtime_metadata_path = "./artifacts/glutton_metadata_v1.scale")]
 pub mod glutton_para {}
 
 type RuntimeCall = glutton_para::runtime_types::glutton_runtime::RuntimeCall;
@@ -150,7 +150,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if let Some(new_storage) = args.storage {
             // Build `set_storage` call
             let set_storage_call = RuntimeCall::Glutton(GluttonCall::set_storage {
-                storage: Perbill(new_storage),
+                storage: FixedU64(new_storage),
             });
 
             // Sumbit `set_storage` call
@@ -165,7 +165,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if let Some(new_compute) = args.compute {
             // Build `set_compute` call
             let set_compute_call = RuntimeCall::Glutton(GluttonCall::set_compute {
-                compute: Perbill(new_compute),
+                compute: FixedU64(new_compute),
             });
 
             // Sumbit `set_compute` call
