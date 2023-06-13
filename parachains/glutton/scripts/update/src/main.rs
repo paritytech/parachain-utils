@@ -50,7 +50,7 @@ struct Cli {
 }
 
 // Generate an interface that we can use from the node's metadata.
-#[subxt::subxt(runtime_metadata_path = "./artifacts/glutton_metadata.scale")]
+#[subxt::subxt(runtime_metadata_path = "./artifacts/glutton_metadata_v1.scale")]
 pub mod glutton_para {}
 
 type RuntimeCall = glutton_para::runtime_types::glutton_runtime::RuntimeCall;
