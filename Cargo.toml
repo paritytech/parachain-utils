@@ -1,4 +1,5 @@
 [workspace]
 members = [
-  "parachains/glutton/scripts/update"
+  "parachains/glutton/scripts/update",
+  "tools/sudofi",
 ]
