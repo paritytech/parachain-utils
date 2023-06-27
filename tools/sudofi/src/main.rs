@@ -79,9 +79,22 @@ impl pallet_sudo::Config for Runtime {
     }
 
     // Now let's add in the genesis config
-    let chain_spec_contents = read_to_string(&chainspec_rs);
+    let mut chain_spec_contents = read_to_string(&chainspec_rs);
     if !chain_spec_contents.contains(&format!("sudo: {}::SudoConfig", runtime_name)) {
-        let chain_spec_contents = chain_spec_contents.replace(
+        chain_spec_contents = chain_spec_contents.replace(
+            &format!("\t{}::RuntimeGenesisConfig {{", runtime_name),
+            &format!(
+                "\t{}::RuntimeGenesisConfig {{
+\t\tsudo: {}::SudoConfig {{
+\t\t\tkey: Some(get_account_id_from_seed::<sr25519::Public>(\"Alice\")),
+\t\t}},",
+                runtime_name, runtime_name
+            ),
+        );
+        write(&chainspec_rs, &chain_spec_contents);
+    }
+    if !chain_spec_contents.contains(&format!("sudo: {}::SudoConfig", runtime_name)) {
+        chain_spec_contents = chain_spec_contents.replace(
             &format!("\t{}::GenesisConfig {{", runtime_name),
             &format!(
                 "\t{}::GenesisConfig {{
@@ -91,7 +104,7 @@ impl pallet_sudo::Config for Runtime {
                 runtime_name, runtime_name
             ),
         );
-        write(chainspec_rs, chain_spec_contents);
+        write(&chainspec_rs, &chain_spec_contents);
     }
 
     std::process::Command::new("cargo")
