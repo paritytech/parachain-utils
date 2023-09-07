@@ -16,11 +16,23 @@ fn main() {
     } else {
         "relay"
     };
-    add_sudo(&workspace, runtime_parent_dir, "kusama");
-    add_sudo(&workspace, runtime_parent_dir, "polkadot");
+    // By default, we expect that we are inside `polkadot-sdk/polkadot` sub-directory
+    let pallet_sudo_branch = None;
+    add_sudo(&workspace, runtime_parent_dir, "kusama", pallet_sudo_branch);
+    add_sudo(
+        &workspace,
+        runtime_parent_dir,
+        "polkadot",
+        pallet_sudo_branch,
+    );
 }
 
-fn add_sudo(workspace: &Path, runtime_parent_dir: &str, runtime_name: &str) {
+fn add_sudo(
+    workspace: &Path,
+    runtime_parent_dir: &str,
+    runtime_name: &str,
+    pallet_sudo_branch: Option<&str>,
+) {
     let chainspec_rs = workspace.join("node/service/src/chain_spec.rs");
     let runtime_dir = workspace.join(runtime_parent_dir).join(runtime_name);
 
@@ -28,11 +40,16 @@ fn add_sudo(workspace: &Path, runtime_parent_dir: &str, runtime_name: &str) {
 
     let lib_rs = runtime_dir.join("src").join("lib.rs");
     let mut cargo_contents = read_to_string(&cargo_toml);
-    let branch = sniff_branch(&cargo_contents).unwrap_or("master");
-    let sudo_crate = format!(
-        r#"pallet-sudo = {{ git = "https://github.com/paritytech/polkadot-sdk", default-features = false, branch = "{}" }}"#,
-        branch
-    );
+    let sudo_crate = if let Some(branch) = pallet_sudo_branch {
+        let branch = sniff_branch(&cargo_contents).unwrap_or(branch);
+        format!(
+            r#"pallet-sudo = {{ git = "https://github.com/paritytech/polkadot-sdk", default-features = false, branch = "{}" }}"#,
+            branch
+        )
+    } else {
+        r#"pallet-sudo = { path = "../../../substrate/frame/sudo", default-features = false }"#.to_string()
+    };
+
     let mut lib_contents = read_to_string(&lib_rs);
 
     if !cargo_contents.contains(&sudo_crate) {
