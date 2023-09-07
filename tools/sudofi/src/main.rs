@@ -28,9 +28,9 @@ fn add_sudo(workspace: &Path, runtime_parent_dir: &str, runtime_name: &str) {
 
     let lib_rs = runtime_dir.join("src").join("lib.rs");
     let mut cargo_contents = read_to_string(&cargo_toml);
-    let branch = sniff_branch(&cargo_contents).expect("can't sniff branch");
+    let branch = sniff_branch(&cargo_contents).unwrap_or("master");
     let sudo_crate = format!(
-        r#"pallet-sudo = {{ git = "https://github.com/paritytech/substrate", default-features = false, branch = "{}" }}"#,
+        r#"pallet-sudo = {{ git = "https://github.com/paritytech/polkadot-sdk", default-features = false, branch = "{}" }}"#,
         branch
     );
     let mut lib_contents = read_to_string(&lib_rs);
@@ -134,7 +134,7 @@ fn write<P: AsRef<Path>, C: AsRef<[u8]>>(path: P, contents: C) {
 fn sniff_branch(cargo_toml: &str) -> Option<&str> {
     let line = cargo_toml
         .lines()
-        .find(|line| line.contains("git = \"https://github.com/paritytech/substrate\""))?;
+        .find(|line| line.contains("git = \"https://github.com/paritytech/polkadot-sdk\""))?;
     let branch_patern = "branch = \"";
     let pos = line.find(branch_patern)? + branch_patern.len();
     line[pos..].split('"').next()
@@ -146,7 +146,7 @@ mod tests {
 
     #[test]
     fn test_sniff_branch() {
-        let toml = r#"sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.38" }"#;
+        let toml = r#"sp-io = { git = "https://github.com/paritytech/polkadot-sdk", branch = "polkadot-v0.9.38" }"#;
         assert_eq!(sniff_branch(toml), Some("polkadot-v0.9.38"));
     }
 }
